@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>When do FPOs pay farmers? Member-level accounting with fpoValue</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">When do FPOs pay farmers? Member-level
+accounting with fpoValue</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(fpoValue)</span></code></pre></div>
+<p>Farmer producer organisations (FPOs) are expected to raise farmers’
+returns through collective marketing, aggregation, grading and bulk
+procurement. An FPO can, however, generate a surplus that is retained,
+absorbed by costs or captured by a few large suppliers.
+<code>fpoValue</code> therefore keeps two accounts: the <strong>FPO
+account</strong> (what the organisation earns) and the <strong>member
+account</strong> (what each farmer gains relative to marketing alone),
+and reports how the value created is distributed.</p>
+<p>All data below are simulated and illustrative.</p>
+<div id="a-simulated-fpo" class="section level2">
+<h2>A simulated FPO</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">11</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">80</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>size <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;marginal&quot;</span>, <span class="st">&quot;small&quot;</span>, <span class="st">&quot;medium&quot;</span>, <span class="st">&quot;large&quot;</span>), n, <span class="at">replace =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>               <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.45</span>, <span class="fl">0.30</span>, <span class="fl">0.17</span>, <span class="fl">0.08</span>))</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">c</span>(<span class="at">marginal =</span> <span class="dv">6</span>, <span class="at">small =</span> <span class="dv">14</span>, <span class="at">medium =</span> <span class="dv">30</span>, <span class="at">large =</span> <span class="dv">70</span>)[size] <span class="sc">*</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>             stats<span class="sc">::</span><span class="fu">rlnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.3</span>), <span class="dv">1</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>dist_market <span class="ot">&lt;-</span> <span class="fu">round</span>(stats<span class="sc">::</span><span class="fu">runif</span>(n, <span class="dv">15</span>, <span class="dv">35</span>))</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>dist_centre <span class="ot">&lt;-</span> <span class="fu">round</span>(stats<span class="sc">::</span><span class="fu">runif</span>(n, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="fu">table</span>(size)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; size</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;    large marginal   medium    small </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;        2       48        9       21</span></span></code></pre></div>
+</div>
+<div id="transaction-costs-of-each-channel" class="section level2">
+<h2>1. Transaction costs of each channel</h2>
+<p>Selling individually in the wholesale market involves long trips in
+small vehicles, commission, fees and waiting time. Delivering to a
+nearby FPO collection centre involves short trips but later payment.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>mandi <span class="ot">&lt;-</span> <span class="fu">transaction_costs</span>(q, <span class="at">price =</span> <span class="dv">1500</span>, <span class="at">distance =</span> dist_market,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>                           <span class="at">vehicle_capacity =</span> <span class="dv">10</span>, <span class="at">cost_per_km =</span> <span class="dv">12</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>                           <span class="at">fixed_per_trip =</span> <span class="dv">80</span>, <span class="at">commission =</span> <span class="fl">0.04</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                           <span class="at">market_fee =</span> <span class="dv">15</span>, <span class="at">time_hours =</span> <span class="dv">6</span>, <span class="at">wage =</span> <span class="dv">45</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                           <span class="at">rejection =</span> <span class="fl">0.02</span>, <span class="at">payment_delay =</span> <span class="dv">3</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>centre <span class="ot">&lt;-</span> <span class="fu">transaction_costs</span>(q, <span class="at">price =</span> <span class="dv">1500</span>, <span class="at">distance =</span> dist_centre,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>                            <span class="at">vehicle_capacity =</span> <span class="dv">10</span>, <span class="at">cost_per_km =</span> <span class="dv">12</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>                            <span class="at">time_hours =</span> <span class="fl">1.5</span>, <span class="at">wage =</span> <span class="dv">45</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>                            <span class="at">payment_delay =</span> <span class="dv">12</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="fu">tapply</span>(mandi<span class="sc">$</span>per_unit, size, mean)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;    large marginal   medium    small </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 219.9702 266.3598 216.0323 243.2731</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="fu">tapply</span>(centre<span class="sc">$</span>per_unit, size, mean)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;    large marginal   medium    small </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 18.23439 33.54076 22.60657 28.10120</span></span></code></pre></div>
+<p>Because transport is trip-based, the smallest sellers pay the most
+per unit when they market alone, which is the first source of
+progressive gains.</p>
+</div>
+<div id="scale-economies-from-aggregation" class="section level2">
+<h2>2. Scale economies from aggregation</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>agg <span class="ot">&lt;-</span> <span class="fu">aggregation_savings</span>(q, <span class="at">distance_market =</span> dist_market,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>                           <span class="at">distance_centre =</span> dist_centre,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>                           <span class="at">small_capacity =</span> <span class="dv">10</span>, <span class="at">small_cost_per_km =</span> <span class="dv">12</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>                           <span class="at">small_fixed_trip =</span> <span class="dv">80</span>, <span class="at">bulk_capacity =</span> <span class="dv">90</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>                           <span class="at">bulk_cost_per_km =</span> <span class="dv">48</span>, <span class="at">bulk_fixed_trip =</span> <span class="dv">600</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>                           <span class="at">input_quantity =</span> q <span class="sc">/</span> <span class="dv">6</span>, <span class="at">input_price =</span> <span class="dv">1350</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>                           <span class="at">discount_tiers =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>                             <span class="at">min_quantity =</span> <span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">300</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>                             <span class="at">discount =</span> <span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.05</span>, <span class="fl">0.08</span>)),</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>                           <span class="at">grade_shares =</span> <span class="fu">c</span>(<span class="fl">0.45</span>, <span class="fl">0.35</span>, <span class="fl">0.20</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>                           <span class="at">grade_prices =</span> <span class="fu">c</span>(<span class="dv">1850</span>, <span class="dv">1550</span>, <span class="dv">1100</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>                           <span class="at">ungraded_price =</span> <span class="dv">1500</span>, <span class="at">grading_cost =</span> <span class="dv">25</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>agg</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; Scale economies from aggregation</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;     source     total per_unit_marketed share</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;  transport 34,506.60             34.30 29.7%</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;     inputs 11,316.38             11.25  9.7%</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;    grading 70,413.00             70.00 60.6%</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; Total potential saving: 116,235.97 (115.55 per unit marketed)</span></span></code></pre></div>
+</div>
+<div id="surplus-versus-member-benefit" class="section level2">
+<h2>3. Surplus versus member benefit</h2>
+<p>The FPO buys at 1,540, sells graded produce at 1,660, runs a small
+input business and pays half of its surplus as patronage dividends.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>mb <span class="ot">&lt;-</span> <span class="fu">member_benefit</span>(q, <span class="at">outside_price =</span> <span class="dv">1500</span>, <span class="at">member_price =</span> <span class="dv">1540</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>                     <span class="at">sale_price =</span> <span class="dv">1660</span>, <span class="at">outside_cost =</span> mandi<span class="sc">$</span>per_unit,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                     <span class="at">member_cost =</span> centre<span class="sc">$</span>per_unit, <span class="at">handling_cost =</span> <span class="dv">55</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                     <span class="at">fixed_cost =</span> <span class="dv">30000</span>, <span class="at">input_quantity =</span> q <span class="sc">/</span> <span class="dv">6</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                     <span class="at">input_market_price =</span> <span class="dv">1350</span>, <span class="at">input_member_price =</span> <span class="dv">1310</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>                     <span class="at">input_bulk_price =</span> <span class="dv">1260</span>, <span class="at">dividend_share =</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>                     <span class="at">group =</span> size)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>mb</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; FPO surplus and member benefit accounting</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; FPO account</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;   Output margin:          65,383.50</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;   Input margin:           8,382.50</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;   Fixed cost:             30,000.00</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;   Net surplus:            43,766.00</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt;   Dividends / retained:   21,883.00 / 21,883.00</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Value created:            299,658.84</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Received by members:      277,775.84 (92.7%)</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Member benefit per unit:  276.15</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; Benefit channels: price 40,236.00, transaction cost 208,950.84, inputs 6,706.00, dividends 21,883.00</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; Distribution: Gini 0.376, concentration index 0.374; smallest half of suppliers receive 25.3% of benefits for 23.0% of volume; 0.0% of members worse off</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>mb<span class="sc">$</span>distribution<span class="sc">$</span>by_group</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt;      group members member_share quantity_share benefit_share benefit_per_member</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; 1 marginal      48       0.6000      0.3034099     0.3201332           1852.610</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; 2    small      21       0.2625      0.3158366     0.3186092           4214.378</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; 3    large       2       0.0250      0.1307287     0.1279849          17775.559</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; 4   medium       9       0.1125      0.2500249     0.2332727           7199.725</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt;   benefit_per_unit</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; 1         291.3672</span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt; 2         278.5708</span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; 3         270.3507</span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; 4         257.6442</span></span></code></pre></div>
+<p>The concentration index ranks members by quantity: values below the
+Gini coefficient indicate that smaller suppliers gain more per unit than
+larger ones, and the group table shows benefit shares against quantity
+shares.</p>
+<div id="changing-the-pricing-and-dividend-policy" class="section level3">
+<h3>Changing the pricing and dividend policy</h3>
+<p>Paying a lower procurement price and retaining more surplus raises
+the FPO’s surplus but lowers the share of value that reaches
+members.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>policy <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">member_price =</span> <span class="fu">c</span>(<span class="dv">1520</span>, <span class="dv">1540</span>, <span class="dv">1560</span>),</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                      <span class="at">dividend_share =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>policy<span class="sc">$</span>member_share <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(p, d) {</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="fu">member_benefit</span>(q, <span class="dv">1500</span>, p, <span class="dv">1660</span>, <span class="at">outside_cost =</span> mandi<span class="sc">$</span>per_unit,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                 <span class="at">member_cost =</span> centre<span class="sc">$</span>per_unit, <span class="at">handling_cost =</span> <span class="dv">55</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>                 <span class="at">fixed_cost =</span> <span class="dv">30000</span>, <span class="at">dividend_share =</span> d)<span class="sc">$</span>value[[<span class="st">&quot;member_share&quot;</span>]]</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>}, policy<span class="sc">$</span>member_price, policy<span class="sc">$</span>dividend_share)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">xtabs</span>(<span class="fu">round</span>(member_share, <span class="dv">3</span>) <span class="sc">~</span> member_price <span class="sc">+</span> dividend_share, policy)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;             dividend_share</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; member_price     0   0.5     1</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;         1520 0.805 0.902 1.000</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;         1540 0.876 0.938 1.000</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;         1560 0.946 0.973 1.000</span></span></code></pre></div>
+</div>
+</div>
+<div id="break-even-volume" class="section level2">
+<h2>4. Break-even volume</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">break_even_volume</span>(<span class="at">fixed_cost =</span> <span class="dv">30000</span>, <span class="at">sale_price =</span> <span class="dv">1660</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>                  <span class="at">member_price =</span> <span class="fu">c</span>(<span class="dv">1520</span>, <span class="dv">1540</span>, <span class="dv">1560</span>), <span class="at">handling_cost =</span> <span class="dv">55</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                  <span class="at">input_margin =</span> <span class="fu">sum</span>(q <span class="sc">/</span> <span class="dv">6</span>) <span class="sc">*</span> <span class="dv">50</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                  <span class="at">avg_member_volume =</span> <span class="fu">mean</span>(q), <span class="at">current_volume =</span> <span class="fu">sum</span>(q))</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;   fixed_cost sale_price member_price handling_cost unit_margin</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 1      30000       1660         1520            55          85</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; 2      30000       1660         1540            55          65</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 3      30000       1660         1560            55          45</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;   break_even_volume members_needed current_volume margin_of_safety</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 1          254.3235             21         1005.9        0.7471682</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 2          332.5769             27         1005.9        0.6693738</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 3          480.3889             39         1005.9        0.5224288</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;   max_member_price</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 1         1583.509</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 2         1583.509</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 3         1583.509</span></span></code></pre></div>
+<p><code>max_member_price</code> is the highest price the FPO can pay at
+its current volume without making a loss.</p>
+</div>
+<div id="collective-marketing-scenarios" class="section level2">
+<h2>5. Collective marketing scenarios</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">scenario =</span> <span class="fu">c</span>(<span class="st">&quot;village trader&quot;</span>, <span class="st">&quot;individual mandi&quot;</span>, <span class="st">&quot;FPO pooled&quot;</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>               <span class="st">&quot;FPO graded&quot;</span>, <span class="st">&quot;FPO-processor contract&quot;</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">member_price =</span> <span class="fu">c</span>(<span class="dv">1380</span>, <span class="dv">1500</span>, <span class="dv">1520</span>, <span class="dv">1540</span>, <span class="dv">1580</span>),</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">member_cost =</span> <span class="fu">c</span>(<span class="fu">mean</span>(centre<span class="sc">$</span>per_unit), <span class="fu">mean</span>(mandi<span class="sc">$</span>per_unit),</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                  <span class="fu">mean</span>(centre<span class="sc">$</span>per_unit), <span class="fu">mean</span>(centre<span class="sc">$</span>per_unit) <span class="sc">+</span> <span class="dv">10</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>                  <span class="fu">mean</span>(centre<span class="sc">$</span>per_unit) <span class="sc">+</span> <span class="dv">10</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">sale_price =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="dv">1620</span>, <span class="dv">1660</span>, <span class="dv">1720</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">handling_cost =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">45</span>, <span class="dv">55</span>, <span class="dv">70</span>),</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">fixed_cost =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20000</span>, <span class="dv">30000</span>, <span class="dv">40000</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">dividend_share =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>))</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">collective_marketing_scenarios</span>(q, sc, <span class="at">baseline =</span> <span class="st">&quot;individual mandi&quot;</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>                                      <span class="at">group =</span> size)</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>res</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; Collective marketing scenarios (baseline: individual mandi)</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt;                scenario member_net_return net_return_per_unit member_gain</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt;          village trader      1,357,461.93            1,349.50  103,585.39</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt;        individual mandi      1,253,876.54            1,246.52        0.00</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt;              FPO pooled      1,515,950.18            1,507.06  262,073.64</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt;              FPO graded      1,526,038.68            1,517.09  272,162.14</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt;  FPO-processor contract      1,563,789.43            1,554.62  309,912.89</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;  fpo_surplus  retained value_created member_share_of_value share_better_off</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt;         0.00      0.00    103,585.39                100.0%           100.0%</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt;         0.00      0.00          0.00                    NA             0.0%</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt;    35,324.50 17,662.25    279,735.89                 93.7%           100.0%</span></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt;    35,383.50 17,691.75    289,853.89                 93.9%           100.0%</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt;    30,413.00 15,206.50    325,119.39                 95.3%           100.0%</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt;  bottom50_gain</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt;      23,839.36</span></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt;           0.00</span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt;      60,314.19</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt;      62,635.98</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt;      71,324.02</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">#&gt; Mean gain per member by group</span></span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt;          village trader individual mandi FPO pooled FPO graded</span></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt; marginal         654.77                0    1656.58    1720.35</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt; small           1557.91                0    3941.54    4093.27</span></span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt; large           6770.79                0   17130.27   17789.70</span></span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt; medium          2877.66                0    7280.55    7560.81</span></span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="co">#&gt;          FPO-processor contract</span></span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a><span class="co">#&gt; marginal                1958.97</span></span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a><span class="co">#&gt; small                   4661.04</span></span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a><span class="co">#&gt; large                  20257.25</span></span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a><span class="co">#&gt; medium                  8609.55</span></span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="fu">plot</span>(res, <span class="at">las =</span> <span class="dv">2</span>, <span class="at">cex.names =</span> <span class="fl">0.7</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
